@@ -1,0 +1,19 @@
+# 复制本文件为同目录下的 application-dev.yml（已被 .gitignore 忽略），填入本机开发配置
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/vellum
+    username: <your-db-username>
+    password: <your-db-password>
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+vellum:
+  jwt:
+    secret: <your-256-bit-jwt-secret>
+  minio:
+    endpoint: http://localhost:9000
+    access-key: <your-minio-access-key>
+    secret-key: <your-minio-secret-key>
+    bucket: vellum
