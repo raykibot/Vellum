@@ -1,0 +1,233 @@
+@import "tailwindcss";
+
+:root {
+  --v-rail: #f5f5f7;
+  --v-canvas: #ffffff;
+  --v-header: rgba(255, 255, 255, 0.86);
+  --v-drawer: rgba(255, 255, 255, 0.82);
+  --v-selected: #ffffff;
+  --v-selected-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  --v-hover: rgba(0, 0, 0, 0.035);
+  --v-track: #ebebed;
+  --v-border: rgba(0, 0, 0, 0.065);
+  --v-ink: #171717;
+  --v-ink-secondary: #3f3f46;
+  --v-muted: #86868b;
+  --v-dimmed: #b0b0b6;
+  --v-action-bg: #171717;
+  --v-action-hover: #2a2a2d;
+  --v-action-text: #ffffff;
+  --v-action-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 1px 2px rgba(0, 0, 0, 0.14),
+    0 0 0 1px rgba(0, 0, 0, 0.08);
+  color-scheme: light;
+}
+
+.dark {
+  --v-rail: #111113;
+  --v-canvas: #0b0b0c;
+  --v-header: rgba(11, 11, 12, 0.86);
+  --v-drawer: rgba(17, 17, 19, 0.84);
+  --v-selected: #1b1b1e;
+  --v-selected-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --v-hover: rgba(255, 255, 255, 0.04);
+  --v-track: #1c1c1f;
+  --v-border: rgba(255, 255, 255, 0.08);
+  --v-ink: #f2f2f3;
+  --v-ink-secondary: #d4d4d8;
+  --v-muted: #7c7c84;
+  --v-dimmed: #4e4e56;
+  --v-action-bg: #f5f5f7;
+  --v-action-hover: #e4e4e7;
+  --v-action-text: #0b0b0c;
+  --v-action-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 1px 2px rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: var(--v-canvas);
+  color: var(--v-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.subtle-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(128, 128, 134, 0.25) transparent;
+}
+
+.subtle-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.subtle-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.subtle-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(128, 128, 134, 0.22);
+  border-radius: 9999px;
+}
+
+.vellum-prose {
+  color: var(--v-ink);
+  font-size: 16px;
+  line-height: 1.85;
+  word-break: break-word;
+}
+
+.vellum-prose > *:first-child {
+  margin-top: 0;
+}
+
+.vellum-prose > *:last-child {
+  margin-bottom: 0;
+}
+
+.vellum-prose h1 {
+  font-size: 1.5em;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.35;
+  margin: 1.6em 0 0.75em;
+  color: var(--v-ink);
+}
+
+.vellum-prose h2 {
+  font-size: 1.25em;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.4;
+  margin: 1.5em 0 0.65em;
+  color: var(--v-ink);
+}
+
+.vellum-prose h3 {
+  font-size: 1.08em;
+  font-weight: 600;
+  line-height: 1.45;
+  margin: 1.3em 0 0.5em;
+  color: var(--v-ink);
+}
+
+.vellum-prose p {
+  margin: 1.05em 0;
+}
+
+.vellum-prose blockquote {
+  margin: 1.35em 0;
+  padding: 0.15em 0 0.15em 1.05em;
+  border-left: 2.5px solid var(--v-border);
+  color: var(--v-ink-secondary);
+}
+
+.vellum-prose blockquote p {
+  margin: 0.4em 0;
+}
+
+.vellum-prose ul,
+.vellum-prose ol {
+  margin: 1em 0;
+  padding-left: 1.4em;
+}
+
+.vellum-prose ul {
+  list-style-type: disc;
+}
+
+.vellum-prose ol {
+  list-style-type: decimal;
+}
+
+.vellum-prose li {
+  margin: 0.35em 0;
+}
+
+.vellum-prose code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.875em;
+  padding: 0.16em 0.42em;
+  border-radius: 6px;
+  background-color: var(--v-track);
+  color: var(--v-ink);
+}
+
+.vellum-prose pre {
+  margin: 1.25em 0;
+  padding: 1em 1.15em;
+  border-radius: 12px;
+  background-color: var(--v-rail);
+  border: 1px solid var(--v-border);
+  overflow-x: auto;
+  line-height: 1.65;
+}
+
+.vellum-prose pre code {
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  font-size: 0.86em;
+}
+
+.vellum-prose hr {
+  margin: 2em 0;
+  border: 0;
+  border-top: 1px solid var(--v-border);
+}
+
+.vellum-prose a {
+  color: var(--v-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--v-dimmed);
+  text-underline-offset: 3px;
+}
+
+.vellum-prose table {
+  width: 100%;
+  margin: 1.25em 0;
+  border-collapse: collapse;
+  font-size: 0.92em;
+}
+
+.vellum-prose th,
+.vellum-prose td {
+  padding: 0.55em 0.75em;
+  border-bottom: 1px solid var(--v-border);
+  text-align: left;
+}
+
+.vellum-prose th {
+  font-weight: 600;
+  color: var(--v-ink-secondary);
+}
+
+.vellum-prose img {
+  display: block;
+  max-width: 100%;
+  margin: 1.4em 0;
+  border-radius: 16px;
+  border: 1px solid var(--v-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
