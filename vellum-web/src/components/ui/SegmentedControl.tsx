@@ -11,6 +11,7 @@ interface SegmentedControlProps<T extends string> {
   value: T;
   onChange: (value: T) => void;
   layoutId?: string;
+  size?: 'sm' | 'md';
   className?: string;
 }
 
@@ -19,8 +20,11 @@ export function SegmentedControl<T extends string>({
   value,
   onChange,
   layoutId = 'vellum-segment-thumb',
+  size = 'md',
   className,
 }: SegmentedControlProps<T>) {
+  const buttonSizeClass = size === 'sm' ? 'px-3 py-1 text-[12px]' : 'px-4 py-1 text-[12.5px]';
+
   return (
     <div
       role="tablist"
@@ -39,7 +43,10 @@ export function SegmentedControl<T extends string>({
             role="tab"
             aria-selected={active}
             onClick={() => onChange(option.value)}
-            className="relative z-10 px-4 py-1 text-[12.5px] font-medium rounded-full cursor-pointer transition-colors duration-150"
+            className={cn(
+              'relative z-10 font-medium rounded-full cursor-pointer transition-colors duration-150',
+              buttonSizeClass,
+            )}
             style={{ color: active ? 'var(--v-ink)' : 'var(--v-muted)' }}
           >
             {active && (

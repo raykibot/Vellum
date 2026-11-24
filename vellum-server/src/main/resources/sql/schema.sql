@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS post (
 );
 ALTER TABLE post ADD COLUMN IF NOT EXISTS deleted BOOLEAN NOT NULL DEFAULT FALSE;
 CREATE INDEX IF NOT EXISTS idx_post_record_time ON post (record_time DESC);
+CREATE INDEX IF NOT EXISTS idx_post_record_time_id ON post (record_time DESC, id DESC);
 CREATE INDEX IF NOT EXISTS idx_post_city ON post (location_city);
 
 -- 模拟动态与长文数据（可重复执行）

@@ -4,10 +4,11 @@ export interface ApiResult<T> {
   data: T;
 }
 
-export interface PageResult<T> {
-  page: number;
+export interface CursorPageResult<T> {
   size: number;
-  total: number;
+  hasMore: boolean;
+  nextCursorTime: string | null;
+  nextCursorId: string | null;
   items: T[];
 }
 
@@ -23,14 +24,21 @@ export interface PostItem {
   createdAt: string;
   updatedAt: string;
   images: string[] | null;
+  contentTruncated: boolean;
 }
 
 export interface CreatePostRequest {
   title?: string | null;
   type?: PostType;
-  content: string;
+  content?: string;
   locationCity?: string | null;
   recordTime?: string;
+  imageIds?: string[];
+}
+
+export interface UploadFileResponse {
+  id: string;
+  url: string;
 }
 
 export interface LoginRequest {

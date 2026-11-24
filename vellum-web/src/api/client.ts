@@ -38,6 +38,14 @@ http.interceptors.request.use((config) => {
   const baseUrl = getApiBaseUrl();
   config.baseURL = baseUrl || undefined;
 
+  if (config.data instanceof FormData && config.headers) {
+    if (typeof config.headers.delete === 'function') {
+      config.headers.delete('Content-Type');
+    } else {
+      delete config.headers['Content-Type'];
+    }
+  }
+
   const token = getToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

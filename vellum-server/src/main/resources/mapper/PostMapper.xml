@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.vellum.mapper.PostMapper">
+
+    <select id="selectCursorPage" resultType="com.vellum.entity.Post">
+        SELECT id, type, title, content, location_city, record_time, deleted, created_at, updated_at
+        FROM post
+        WHERE deleted = FALSE
+        <if test="type != null and type != ''">
+            AND type = #{type}
+        </if>
+        <if test="cursorTime != null and cursorId != null">
+            AND (record_time, id) &lt; (#{cursorTime}, #{cursorId})
+        </if>
+        ORDER BY record_time DESC, id DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

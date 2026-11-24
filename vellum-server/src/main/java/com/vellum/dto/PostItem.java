@@ -15,6 +15,7 @@ public record PostItem(
         OffsetDateTime recordTime,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt,
-        List<String> images
+        List<String> images,
+        boolean contentTruncated
 ) {
 }

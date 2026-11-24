@@ -1,26 +1,76 @@
 import {
   useInfiniteQuery,
   useMutation,
+  useQuery,
   useQueryClient,
   type InfiniteData,
+  type QueryKey,
 } from '@tanstack/react-query';
-import { createPost, deletePost, fetchPosts } from '@/api/posts';
-import type { CreatePostRequest, PageResult, PostItem } from '@/types/api';
+import { createPost, deletePost, fetchPostDetail, fetchPosts, type PostFilterType } from '@/api/posts';
+import type { CreatePostRequest, CursorPageResult, PostItem } from '@/types/api';
+
+export type PostFilter = 'all' | 'moment' | 'article';
 
 export const POSTS_QUERY_KEY = ['posts'] as const;
-const PAGE_SIZE = 20;
+const ROW_ESTIMATE_PX = 78;
+const BUFFER_ROWS = 2;
 
-export function usePostsTimeline() {
+export interface PostCursor {
+  cursorTime: string;
+  cursorId: string;
+}
+
+export function computeInitialPageSize(): number {
+  if (typeof window === 'undefined') {
+    return 11;
+  }
+  const availableHeight = Math.max(window.innerHeight - 140, 400);
+  return Math.min(20, Math.max(10, Math.ceil(availableHeight / ROW_ESTIMATE_PX) + BUFFER_ROWS));
+}
+
+function toApiFilterType(filter: PostFilter): PostFilterType | undefined {
+  if (filter === 'moment') return 'MOMENT';
+  if (filter === 'article') return 'ARTICLE';
+  return undefined;
+}
+
+export function usePostsTimeline(filter: PostFilter, pageSize: number) {
+  const apiType = toApiFilterType(filter);
   return useInfiniteQuery({
-    queryKey: POSTS_QUERY_KEY,
-    queryFn: ({ pageParam }) => fetchPosts(pageParam, PAGE_SIZE),
-    initialPageParam: 1,
+    queryKey: [...POSTS_QUERY_KEY, filter, pageSize] as const,
+    queryFn: ({ pageParam }) =>
+      fetchPosts({
+        size: pageSize,
+        type: apiType,
+        cursorTime: pageParam?.cursorTime,
+        cursorId: pageParam?.cursorId,
+      }),
+    initialPageParam: null as PostCursor | null,
     getNextPageParam: (lastPage) =>
-      lastPage.page * lastPage.size < lastPage.total ? lastPage.page + 1 : undefined,
+      lastPage.hasMore && lastPage.nextCursorTime && lastPage.nextCursorId
+        ? {
+            cursorTime: lastPage.nextCursorTime,
+            cursorId: lastPage.nextCursorId,
+          }
+        : undefined,
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
   });
 }
 
-export function flattenPosts(data?: InfiniteData<PageResult<PostItem>>): PostItem[] {
+export function usePostDetail(post: PostItem | null) {
+  const needsDetail = Boolean(post && post.contentTruncated);
+  return useQuery({
+    queryKey: ['post', post?.id ?? ''] as const,
+    queryFn: () => fetchPostDetail(post!.id),
+    enabled: needsDetail,
+    initialData: post && !post.contentTruncated ? post : undefined,
+    staleTime: 10 * 60_000,
+    gcTime: 30 * 60_000,
+  });
+}
+
+export function flattenPosts(data?: InfiniteData<CursorPageResult<PostItem>>): PostItem[] {
   if (!data) return [];
   const seen = new Set<string>();
   const list: PostItem[] = [];
@@ -41,32 +91,49 @@ function comparePostsDesc(a: PostItem, b: PostItem): number {
   return b.id.localeCompare(a.id);
 }
 
+function shouldIncludeInFilter(filter: unknown, postType: PostItem['type']): boolean {
+  if (filter === 'all') return true;
+  if (filter === 'moment') return postType === 'MOMENT';
+  if (filter === 'article') return postType === 'ARTICLE';
+  return false;
+}
+
 export function useCreatePost() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (payload: CreatePostRequest) => createPost(payload),
     onSuccess: (created) => {
-      queryClient.setQueryData<InfiniteData<PageResult<PostItem>>>(POSTS_QUERY_KEY, (old) => {
-        if (!old || old.pages.length === 0) return old;
+      queryClient.setQueryData(['post', created.id], created);
+
+      const cachedLists = queryClient.getQueriesData<InfiniteData<CursorPageResult<PostItem>>>({
+        queryKey: POSTS_QUERY_KEY,
+      });
+
+      for (const [queryKey, old] of cachedLists) {
+        const filter = Array.isArray(queryKey) ? queryKey[1] : undefined;
+        if (!shouldIncludeInFilter(filter, created.type)) {
+          continue;
+        }
+        if (!old || old.pages.length === 0) {
+          continue;
+        }
         const firstPage = old.pages[0];
         const restPages = old.pages.slice(1);
         const mergedFirstItems = [created, ...firstPage.items.filter((i) => i.id !== created.id)].sort(
           comparePostsDesc,
         );
-        return {
+        queryClient.setQueryData<InfiniteData<CursorPageResult<PostItem>>>(queryKey, {
           ...old,
           pages: [
             {
               ...firstPage,
-              total: firstPage.total + 1,
               items: mergedFirstItems,
             },
             ...restPages,
           ],
-        };
-      });
-      void queryClient.invalidateQueries({ queryKey: POSTS_QUERY_KEY });
+        });
+      }
     },
   });
 }
@@ -78,27 +145,31 @@ export function useDeletePost() {
     mutationFn: (id: string) => deletePost(id),
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: POSTS_QUERY_KEY });
-      const previous = queryClient.getQueryData<InfiniteData<PageResult<PostItem>>>(POSTS_QUERY_KEY);
-      queryClient.setQueryData<InfiniteData<PageResult<PostItem>>>(POSTS_QUERY_KEY, (old) => {
-        if (!old) return old;
-        return {
+      const previousLists = queryClient.getQueriesData<InfiniteData<CursorPageResult<PostItem>>>({
+        queryKey: POSTS_QUERY_KEY,
+      });
+
+      for (const [queryKey, old] of previousLists) {
+        if (!old) continue;
+        queryClient.setQueryData<InfiniteData<CursorPageResult<PostItem>>>(queryKey, {
           ...old,
           pages: old.pages.map((page) => ({
             ...page,
-            total: Math.max(0, page.total - 1),
             items: page.items.filter((item) => item.id !== id),
           })),
-        };
-      });
-      return { previous };
+        });
+      }
+
+      queryClient.removeQueries({ queryKey: ['post', id] });
+      return { previousLists } as {
+        previousLists: Array<[QueryKey, InfiniteData<CursorPageResult<PostItem>> | undefined]>;
+      };
     },
     onError: (_err, _id, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(POSTS_QUERY_KEY, context.previous);
+      if (!context?.previousLists) return;
+      for (const [queryKey, snapshot] of context.previousLists) {
+        queryClient.setQueryData(queryKey, snapshot);
       }
-    },
-    onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: POSTS_QUERY_KEY });
     },
   });
 }

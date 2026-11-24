@@ -1,49 +1,33 @@
 import { Moon, PanelLeft, Settings, Sun } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '@/hooks/useTheme';
-import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { TactileButton } from '@/components/ui/TactileButton';
 
-export type NavTab = 'moment' | 'article';
-
 interface TopNavProps {
-  activeTab: NavTab;
-  showSidebarToggle?: boolean;
-  sidebarOpen?: boolean;
-  onToggleSidebar?: () => void;
-  primaryActionLabel: string;
-  primaryActionLoading?: boolean;
-  primaryActionDisabled?: boolean;
-  onPrimaryAction: () => void;
+  sidebarOpen: boolean;
+  onToggleSidebar: () => void;
+  composingArticle: boolean;
+  articleSubmitting?: boolean;
+  onWriteMoment: () => void;
+  onWriteArticle: () => void;
+  onCancelArticle: () => void;
+  onPublishArticle: () => void;
+  onBrandClick: () => void;
   onOpenSettings: () => void;
 }
 
-const TAB_OPTIONS = [
-  { value: 'moment', label: '动态' },
-  { value: 'article', label: '长文' },
-] as const;
-
 export function TopNav({
-  activeTab,
-  showSidebarToggle = false,
-  sidebarOpen = false,
+  sidebarOpen,
   onToggleSidebar,
-  primaryActionLabel,
-  primaryActionLoading = false,
-  primaryActionDisabled = false,
-  onPrimaryAction,
+  composingArticle,
+  articleSubmitting = false,
+  onWriteMoment,
+  onWriteArticle,
+  onCancelArticle,
+  onPublishArticle,
+  onBrandClick,
   onOpenSettings,
 }: TopNavProps) {
-  const navigate = useNavigate();
   const { resolvedTheme, toggleQuick } = useTheme();
-
-  const handleTabChange = (nextTab: NavTab) => {
-    if (nextTab === 'moment') {
-      navigate('/');
-    } else {
-      navigate('/articles');
-    }
-  };
 
   return (
     <header
@@ -53,38 +37,35 @@ export function TopNav({
         borderColor: 'var(--v-border)',
       }}
     >
-      {/* Left: optional drawer toggle + Vellum wordmark */}
+      {/* Left: persistent sidebar toggle + Vellum wordmark */}
       <div className="flex items-center gap-1.5 min-w-0">
-        {showSidebarToggle && (
-          <TactileButton
-            variant="ghost"
-            size="icon"
-            aria-label="切换长文列表"
-            onClick={onToggleSidebar}
-            style={
-              sidebarOpen
-                ? { backgroundColor: 'var(--v-hover)', color: 'var(--v-ink)' }
-                : undefined
-            }
-          >
-            <PanelLeft className="w-[17px] h-[17px]" strokeWidth={1.8} />
-          </TactileButton>
-        )}
-        <Link
-          to="/"
-          className="text-[15px] font-semibold tracking-tight px-1.5 py-1 rounded-lg transition-opacity hover:opacity-80"
+        <TactileButton
+          variant="ghost"
+          size="icon"
+          aria-label={sidebarOpen ? '收起侧边栏' : '展开侧边栏'}
+          title="展开/收起侧边栏 (Ctrl+\)"
+          onClick={onToggleSidebar}
+          className="hidden md:inline-flex"
+          style={
+            sidebarOpen
+              ? { backgroundColor: 'var(--v-hover)', color: 'var(--v-ink)' }
+              : undefined
+          }
+        >
+          <PanelLeft className="w-[17px] h-[17px]" strokeWidth={1.8} />
+        </TactileButton>
+
+        <button
+          type="button"
+          onClick={onBrandClick}
+          className="text-[15px] font-semibold tracking-tight px-1.5 py-1 rounded-lg cursor-pointer transition-opacity hover:opacity-80"
           style={{ color: 'var(--v-ink)' }}
         >
           Vellum
-        </Link>
+        </button>
       </div>
 
-      {/* Center: 动态 / 长文 segmented control */}
-      <div className="absolute left-1/2 -translate-x-1/2">
-        <SegmentedControl options={TAB_OPTIONS} value={activeTab} onChange={handleTabChange} />
-      </div>
-
-      {/* Right: theme toggle, settings, primary action */}
+      {/* Right: theme toggle, settings, compose actions */}
       <div className="flex items-center gap-1.5">
         <TactileButton
           variant="ghost"
@@ -108,16 +89,30 @@ export function TopNav({
           <Settings className="w-4 h-4" strokeWidth={1.8} />
         </TactileButton>
 
-        <TactileButton
-          variant="solid"
-          size="sm"
-          loading={primaryActionLoading}
-          disabled={primaryActionDisabled}
-          onClick={onPrimaryAction}
-          className="ml-1"
-        >
-          {primaryActionLabel}
-        </TactileButton>
+        {composingArticle ? (
+          <>
+            <TactileButton variant="ghost" size="sm" onClick={onCancelArticle} className="ml-1">
+              取消
+            </TactileButton>
+            <TactileButton
+              variant="solid"
+              size="sm"
+              loading={articleSubmitting}
+              onClick={onPublishArticle}
+            >
+              发布
+            </TactileButton>
+          </>
+        ) : (
+          <>
+            <TactileButton variant="ghost" size="sm" onClick={onWriteArticle} className="ml-1">
+              写长文
+            </TactileButton>
+            <TactileButton variant="solid" size="sm" onClick={onWriteMoment}>
+              写一条
+            </TactileButton>
+          </>
+        )}
       </div>
     </header>
   );

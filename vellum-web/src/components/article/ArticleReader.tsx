@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { Check, Download, Trash2 } from 'lucide-react';
+import { ArrowLeft, Check, Download, Maximize2, Minimize2, Trash2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { downloadPostFile } from '@/lib/fileIo';
@@ -12,11 +12,23 @@ import type { PostItem } from '@/types/api';
 
 interface ArticleReaderProps {
   post: PostItem;
+  isLoadingBody?: boolean;
   onDelete: (id: string) => Promise<void>;
   isDeleting: boolean;
+  sidebarOpen?: boolean;
+  onToggleFocus?: () => void;
+  onMobileBack?: () => void;
 }
 
-export function ArticleReader({ post, onDelete, isDeleting }: ArticleReaderProps) {
+export function ArticleReader({
+  post,
+  isLoadingBody = false,
+  onDelete,
+  isDeleting,
+  sidebarOpen = true,
+  onToggleFocus,
+  onMobileBack,
+}: ArticleReaderProps) {
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [exported, setExported] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -69,16 +81,47 @@ export function ArticleReader({ post, onDelete, isDeleting }: ArticleReaderProps
           className="flex items-center justify-between pb-4 mb-8 border-b"
           style={{ borderColor: 'var(--v-border)' }}
         >
-          <span className="text-[13px] tabular-nums" style={{ color: 'var(--v-muted)' }}>
-            {meta}
-          </span>
+          <div className="flex items-center gap-2 min-w-0">
+            {onMobileBack && (
+              <TactileButton
+                variant="ghost"
+                size="icon"
+                aria-label="返回列表"
+                onClick={onMobileBack}
+                className="md:hidden -ml-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </TactileButton>
+            )}
+            <span className="text-[13px] tabular-nums truncate" style={{ color: 'var(--v-muted)' }}>
+              {meta}
+            </span>
+          </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
+            {onToggleFocus && (
+              <TactileButton
+                variant="ghost"
+                size="icon"
+                aria-label={sidebarOpen ? '专注阅读' : '展开时间栏'}
+                title={sidebarOpen ? '专注阅读（收起侧栏）' : '展开时间栏'}
+                onClick={onToggleFocus}
+                className="hidden md:inline-flex"
+              >
+                {sidebarOpen ? (
+                  <Maximize2 className="w-[15px] h-[15px]" />
+                ) : (
+                  <Minimize2 className="w-[15px] h-[15px]" />
+                )}
+              </TactileButton>
+            )}
+
             <div ref={menuRef} className="relative">
               <TactileButton
                 variant="ghost"
                 size="icon"
                 aria-label="另存为"
+                disabled={isLoadingBody}
                 onClick={() => setExportMenuOpen((v) => !v)}
                 style={exported ? { color: 'var(--v-ink)' } : undefined}
               >
@@ -132,9 +175,18 @@ export function ArticleReader({ post, onDelete, isDeleting }: ArticleReaderProps
           {post.title || '无题'}
         </h1>
 
-        <div className="vellum-prose">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{cleanBody}</ReactMarkdown>
-        </div>
+        {isLoadingBody ? (
+          <div className="space-y-3.5 py-1">
+            <div className="h-4 w-full rounded animate-pulse" style={{ backgroundColor: 'var(--v-hover)' }} />
+            <div className="h-4 w-11/12 rounded animate-pulse" style={{ backgroundColor: 'var(--v-hover)' }} />
+            <div className="h-4 w-full rounded animate-pulse" style={{ backgroundColor: 'var(--v-hover)' }} />
+            <div className="h-4 w-3/4 rounded animate-pulse" style={{ backgroundColor: 'var(--v-hover)' }} />
+          </div>
+        ) : (
+          <div className="vellum-prose">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{cleanBody}</ReactMarkdown>
+          </div>
+        )}
 
         {post.images && post.images.length > 0 && (
           <div className="mt-8">

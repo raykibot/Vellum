@@ -26,6 +26,17 @@ export function setApiBaseUrl(url: string): void {
   }
 }
 
+export function resolveMediaUrl(url: string): string {
+  if (!url || /^(https?:|blob:|data:)/i.test(url)) {
+    return url;
+  }
+  const baseUrl = getApiBaseUrl();
+  if (!baseUrl) {
+    return url;
+  }
+  return `${baseUrl}${url.startsWith('/') ? url : `/${url}`}`;
+}
+
 export function getToken(): string | null {
   try {
     return localStorage.getItem(TOKEN_KEY);

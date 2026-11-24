@@ -146,13 +146,20 @@ export function MomentDetail({
           </div>
         </div>
 
-        <div className="space-y-3.5 text-[15.5px] leading-[1.85]" style={{ color: 'var(--v-ink)' }}>
-          {paragraphs.map((paragraph, idx) => (
-            <p key={idx}>{paragraph}</p>
-          ))}
-        </div>
+        {paragraphs.length > 0 && (
+          <div className="space-y-3.5 text-[15.5px] leading-[1.85]" style={{ color: 'var(--v-ink)' }}>
+            {paragraphs.map((paragraph, idx) => (
+              <p key={idx}>{paragraph}</p>
+            ))}
+          </div>
+        )}
 
-        {post.images && post.images.length > 0 && <PhotoGallery images={post.images} />}
+        {post.images && post.images.length > 0 && (
+          <PhotoGallery
+            images={post.images}
+            className={paragraphs.length > 0 ? 'mt-5' : 'mt-0'}
+          />
+        )}
       </motion.div>
 
       <Modal open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)} maxWidthClass="max-w-[320px]">

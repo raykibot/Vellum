@@ -3,12 +3,13 @@ package com.vellum.controller;
 import com.vellum.common.BizException;
 import com.vellum.common.Result;
 import com.vellum.dto.CreatePostRequest;
-import com.vellum.dto.PageResult;
+import com.vellum.dto.CursorPageResult;
 import com.vellum.dto.PostItem;
 import com.vellum.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.OffsetDateTime;
 
 /**
  * 动态 / 长文与文档读写接口。
@@ -31,26 +34,37 @@ public class PostController {
     private final PostService postService;
 
     @GetMapping
-    public Result<PageResult<PostItem>> list(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "5") int size) {
-        log.info("首页数据返回");
+    public Result<CursorPageResult<PostItem>> list(
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime cursorTime,
+            @RequestParam(required = false) String cursorId) {
+        log.info("分页查询时间流, size={}, type={}", size, type);
         try {
-            return Result.ok(postService.list(page, size));
+            return Result.ok(postService.list(size, type, cursorTime, cursorId));
         } catch (BizException e) {
-            log.warn("分页查询时间流失败, page={}, size={}, code={}, message={}",
-                    page, size, e.getCode(), e.getMessage(), e);
+            log.warn("分页查询时间流失败, size={}, type={}, code={}, message={}",
+                    size, type, e.getCode(), e.getMessage(), e);
             return Result.fail(e.getCode(), e.getMessage());
         } catch (Exception e) {
-            log.error("分页查询时间流异常, page={}, size={}", page, size, e);
+            log.error("分页查询时间流异常, size={}, type={}", size, type, e);
             return Result.fail(500, "查询失败");
         }
     }
 
     @GetMapping("/{id}")
-    public Result<Void> detail(@PathVariable String id) {
-        // TODO: 查询单条动态或长文详情（含关联图片）
-        throw new BizException(501, "接口尚未实现");
+    public Result<PostItem> detail(@PathVariable String id) {
+        log.info("查询记录详情, id={}", id);
+        try {
+            return Result.ok(postService.detail(id));
+        } catch (BizException e) {
+            log.warn("查询记录详情失败, id={}, code={}, message={}",
+                    id, e.getCode(), e.getMessage(), e);
+            return Result.fail(e.getCode(), e.getMessage());
+        } catch (Exception e) {
+            log.error("查询记录详情异常, id={}", id, e);
+            return Result.fail(500, "查询详情失败");
+        }
     }
 
     @PostMapping

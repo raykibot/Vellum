@@ -4,7 +4,6 @@ import type { ReactNode } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { ThemeProvider } from '@/hooks/useTheme';
-import { ArticlePage } from '@/pages/ArticlePage';
 import { LoginPage } from '@/pages/LoginPage';
 import { TimelinePage } from '@/pages/TimelinePage';
 
@@ -55,30 +54,6 @@ export function App() {
                   element={
                     <RequireAuth>
                       <TimelinePage />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/articles"
-                  element={
-                    <RequireAuth>
-                      <ArticlePage />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/articles/new"
-                  element={
-                    <RequireAuth>
-                      <ArticlePage />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/articles/:id"
-                  element={
-                    <RequireAuth>
-                      <ArticlePage />
                     </RequireAuth>
                   }
                 />

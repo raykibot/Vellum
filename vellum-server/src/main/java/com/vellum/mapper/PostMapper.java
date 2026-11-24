@@ -11,22 +11,26 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 /**
- * 动态 / 长文表 Mapper（单表简单操作）。
+ * 动态 / 长文表 Mapper（单表简单操作，游标筛选查询在 XML 中维护）。
  */
 public interface PostMapper extends BaseMapper<Post> {
 
     /**
-     * 统计未删除的动态与长文总条数。
-     */
-    @Select("SELECT COUNT(*) FROM post WHERE deleted = FALSE")
-    long countAll();
-
-    /**
-     * 按记录时间倒序分页查询未删除记录。
+     * 按记录 ID 查询单条未删除记录（用于详情页按需获取完整正文）。
      */
     @Select("SELECT id, type, title, content, location_city, record_time, deleted, created_at, updated_at "
-            + "FROM post WHERE deleted = FALSE ORDER BY record_time DESC, id DESC LIMIT #{size} OFFSET #{offset}")
-    List<Post> selectPage(@Param("size") int size, @Param("offset") int offset);
+            + "FROM post WHERE id = #{id} AND deleted = FALSE LIMIT 1")
+    Post selectActiveById(@Param("id") String id);
+
+    /**
+     * 游标分页查询未删除记录（支持类型筛选与多查 1 条判断 hasMore）。
+     */
+    List<Post> selectCursorPage(
+            @Param("type") String type,
+            @Param("cursorTime") OffsetDateTime cursorTime,
+            @Param("cursorId") String cursorId,
+            @Param("limit") int limit
+    );
 
     /**
      * 插入一条动态或长文记录。
