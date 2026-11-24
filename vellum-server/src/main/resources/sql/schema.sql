@@ -131,3 +131,5 @@ CREATE TABLE IF NOT EXISTS post_image (
 );
 ALTER TABLE post_image ADD COLUMN IF NOT EXISTS deleted BOOLEAN NOT NULL DEFAULT FALSE;
 CREATE INDEX IF NOT EXISTS idx_post_image_post_id ON post_image (post_id);
+
+CREATE INDEX IF NOT EXISTS idx_post_record_time_id ON post (record_time DESC, id DESC);

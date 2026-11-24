@@ -5,6 +5,9 @@ import com.vellum.dto.LoginRequest;
 import com.vellum.dto.LoginResponse;
 import com.vellum.entity.SysUser;
 import com.vellum.mapper.SysUserMapper;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
@@ -46,16 +49,39 @@ public class AuthService {
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
         OffsetDateTime expiresAt = now.plusDays(expireDays);
 
-        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
         String token = Jwts.builder()
                 .subject(user.getId())
                 .claim("username", user.getUsername())
                 .issuedAt(Date.from(now.toInstant()))
                 .expiration(Date.from(expiresAt.toInstant()))
-                .signWith(key)
+                .signWith(signingKey())
                 .compact();
 
         return new LoginResponse(token, expiresAt);
+    }
+
+    /**
+     * 校验 JWT 签名与过期时间并返回 Claims，失败统一抛出 401 业务异常。
+     */
+    public Claims parseToken(String token) {
+        if (token == null || token.isBlank()) {
+            throw new BizException(401, "未登录或登录已过期");
+        }
+        try {
+            return Jwts.parser()
+                    .verifyWith(signingKey())
+                    .build()
+                    .parseSignedClaims(token.trim())
+                    .getPayload();
+        } catch (ExpiredJwtException e) {
+            throw new BizException(401, "登录已过期，请重新登录");
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new BizException(401, "登录凭证无效，请重新登录");
+        }
+    }
+
+    private SecretKey signingKey() {
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 
     // TODO: 后续补充 changePassword 方法

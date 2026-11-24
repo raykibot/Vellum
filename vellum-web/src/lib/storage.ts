@@ -31,10 +31,13 @@ export function resolveMediaUrl(url: string): string {
     return url;
   }
   const baseUrl = getApiBaseUrl();
-  if (!baseUrl) {
-    return url;
+  const resolved = !baseUrl ? url : `${baseUrl}${url.startsWith('/') ? url : `/${url}`}`;
+  const token = getToken();
+  if (token && resolved.includes('/api/v1/files/') && !resolved.includes('token=')) {
+    const sep = resolved.includes('?') ? '&' : '?';
+    return `${resolved}${sep}token=${encodeURIComponent(token)}`;
   }
-  return `${baseUrl}${url.startsWith('/') ? url : `/${url}`}`;
+  return resolved;
 }
 
 export function getToken(): string | null {

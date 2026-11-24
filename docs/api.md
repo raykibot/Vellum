@@ -29,8 +29,9 @@
 | `501` | 接口尚未实现 | 骨架占位接口默认抛出 |
 
 ### 0.2 鉴权拦截规则
-- 在 [WebConfig.java](file:///d:/Code/code_self/vellum-server/src/main/java/com/vellum/config/WebConfig.java) 中配置了拦截器规则：放行 `/api/v1/auth/login`，其余 `/api/**` 请求均会经过 [JwtInterceptor.java](file:///d:/Code/code_self/vellum-server/src/main/java/com/vellum/common/JwtInterceptor.java)。
-- **当前状态**：`JwtInterceptor` 仍处于骨架阶段（暂直接 `return true` 放行），待完成 `Bearer <token>` 校验逻辑后生效。
+- 在 [WebConfig.java](file:///d:/Code/code_self/vellum-server/src/main/java/com/vellum/config/WebConfig.java) 中配置拦截器：仅放行 `/api/v1/auth/login`，其余 `/api/**` 请求统一由 [JwtInterceptor.java](file:///d:/Code/code_self/vellum-server/src/main/java/com/vellum/common/JwtInterceptor.java) 校验 7 天有效期 JWT。
+- **Token 传递方式**：常规接口通过请求头 `Authorization: Bearer <token>` 传递；`<img>` 等无法设置请求头的媒体请求支持通过 Query 参数 `?token=<token>` 传递。
+- **失败响应**：缺失、签名无效或过期时，统一返回 HTTP `401` 状态码与 JSON `{ "code": 401, "message": "...", "data": null }`。
 
 ---
 
@@ -107,7 +108,7 @@
 > **设计定位**：按记录时间倒序游标分页展示，支持类型筛选（`ALL` / `MOMENT` / `ARTICLE`）。短动态直接返回完整正文；长文仅返回去除了重复标题头的前 140 字摘要并标记 `contentTruncated = true`，点击进入详情时再按需加载完整正文，大幅节省首屏带宽。
 
 - **接口路径**：`GET /api/v1/posts`
-- **是否鉴权**：是（需携带 `Authorization: Bearer <token>`；当前 `JwtInterceptor` 处于骨架放行状态）
+- **是否鉴权**：是（需携带 `Authorization: Bearer <token>`）
 - **关联代码**：
   - [PostController.java](file:///d:/Code/code_self/vellum-server/src/main/java/com/vellum/controller/PostController.java)
   - [PostService.java](file:///d:/Code/code_self/vellum-server/src/main/java/com/vellum/service/PostService.java)
@@ -225,7 +226,7 @@
 ### 2.3 发布动态 / 长文（✅ 已实现）
 
 - **接口路径**：`POST /api/v1/posts`
-- **是否鉴权**：是（需携带 `Authorization: Bearer <token>`；当前 `JwtInterceptor` 处于骨架放行状态）
+- **是否鉴权**：是（需携带 `Authorization: Bearer <token>`）
 - **关联代码**：
   - [PostController.java](file:///d:/Code/code_self/vellum-server/src/main/java/com/vellum/controller/PostController.java)
   - [PostService.java](file:///d:/Code/code_self/vellum-server/src/main/java/com/vellum/service/PostService.java)
@@ -298,7 +299,7 @@
 ### 2.4 删除动态 / 长文（✅ 已实现）
 
 - **接口路径**：`DELETE /api/v1/posts/{id}`
-- **是否鉴权**：是（需携带 `Authorization: Bearer <token>`；当前 `JwtInterceptor` 处于骨架放行状态）
+- **是否鉴权**：是（需携带 `Authorization: Bearer <token>`）
 - **关联代码**：
   - [PostController.java](file:///d:/Code/code_self/vellum-server/src/main/java/com/vellum/controller/PostController.java)
   - [PostService.java](file:///d:/Code/code_self/vellum-server/src/main/java/com/vellum/service/PostService.java)
@@ -398,6 +399,7 @@
 ### 3.2 流式读取图片（✅ 已实现）
 
 - **接口路径**：`GET /api/v1/files/{id}`
+- **是否鉴权**：是（支持 `Authorization: Bearer <token>` 或 Query 参数 `?token=<token>`）
 - **响应形式**：直接返回二进制图片流（供 `<img>` 原生渲染），不包裹 JSON。
 - **缓存协商与状态码**：
   - 优先查询 `post_image` 有效元数据（不存在或已删除直接返回 `404 Not Found`）；

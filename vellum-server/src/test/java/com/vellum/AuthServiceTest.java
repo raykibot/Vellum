@@ -27,6 +27,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -136,6 +139,40 @@ class AuthServiceTest {
                         .content("{\"username\":\"\",\"password\":\"\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(400));
+    }
+
+    @Test
+    void parseTokenShouldVerifyValidRejectExpiredAndWrongSecret() {
+        SysUser user = buildUser("Luojiakeng", passwordEncoder.encode("690501"));
+        when(sysUserMapper.selectByUsername("Luojiakeng")).thenReturn(user);
+
+        LoginResponse response = authService.login(new LoginRequest("Luojiakeng", "690501"));
+        Claims claims = authService.parseToken(response.token());
+        assertEquals(DEFAULT_USER_ID, claims.getSubject());
+        assertEquals("Luojiakeng", claims.get("username", String.class));
+
+        BizException blankEx = assertThrows(BizException.class, () -> authService.parseToken(" "));
+        assertEquals(401, blankEx.getCode());
+
+        SecretKey validKey = Keys.hmacShaKeyFor(TEST_JWT_SECRET.getBytes(StandardCharsets.UTF_8));
+        String expiredToken = Jwts.builder()
+                .subject(DEFAULT_USER_ID)
+                .issuedAt(Date.from(Instant.now().minus(8, ChronoUnit.DAYS)))
+                .expiration(Date.from(Instant.now().minus(1, ChronoUnit.MINUTES)))
+                .signWith(validKey)
+                .compact();
+        BizException expiredEx = assertThrows(BizException.class, () -> authService.parseToken(expiredToken));
+        assertEquals(401, expiredEx.getCode());
+
+        SecretKey wrongKey = Keys.hmacShaKeyFor("wrong-secret-key-must-be-at-least-32-bytes-long".getBytes(StandardCharsets.UTF_8));
+        String wrongSigToken = Jwts.builder()
+                .subject(DEFAULT_USER_ID)
+                .issuedAt(new Date())
+                .expiration(Date.from(Instant.now().plus(1, ChronoUnit.HOURS)))
+                .signWith(wrongKey)
+                .compact();
+        BizException wrongEx = assertThrows(BizException.class, () -> authService.parseToken(wrongSigToken));
+        assertEquals(401, wrongEx.getCode());
     }
 
     private SysUser buildUser(String username, String passwordHash) {
