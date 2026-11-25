@@ -66,6 +66,33 @@ function unwrapResult<T>(payload: ApiResult<T>): T {
   throw new ApiError(500, '响应格式异常');
 }
 
+function extractFilename(disposition?: string): string | null {
+  if (!disposition) return null;
+  const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+  if (utf8Match?.[1]) {
+    try {
+      return decodeURIComponent(utf8Match[1].trim().replace(/^["']|["']$/g, ''));
+    } catch {
+      // ignore invalid URI encoding and fall back to plain filename
+    }
+  }
+  const plainMatch = disposition.match(/filename="?([^";]+)"?/i);
+  return plainMatch?.[1]?.trim() || null;
+}
+
+async function tryParseJsonBlob(blob: Blob): Promise<ApiResult<unknown> | null> {
+  try {
+    const text = await blob.text();
+    const parsed = JSON.parse(text) as ApiResult<unknown>;
+    if (parsed && typeof parsed.code === 'number') {
+      return parsed;
+    }
+  } catch {
+    // non-JSON blob payload
+  }
+  return null;
+}
+
 function handleRequestError(error: unknown): never {
   if (error instanceof ApiError) {
     throw error;
@@ -96,6 +123,46 @@ export const apiClient = {
       const response = await http.get<ApiResult<T>>(url, config);
       return unwrapResult(response.data);
     } catch (error) {
+      return handleRequestError(error);
+    }
+  },
+
+  async getBlob(
+    url: string,
+    config?: AxiosRequestConfig,
+  ): Promise<{ blob: Blob; filename: string | null }> {
+    try {
+      const response = await http.get<Blob>(url, {
+        ...config,
+        responseType: 'blob',
+      });
+      const contentType = String(
+        response.headers?.['content-type'] || response.data.type || '',
+      ).toLowerCase();
+      if (contentType.includes('application/json')) {
+        const jsonPayload = await tryParseJsonBlob(response.data);
+        if (jsonPayload) {
+          unwrapResult(jsonPayload);
+        }
+        throw new ApiError(500, '响应格式异常');
+      }
+      const disposition = response.headers?.['content-disposition'];
+      const filename = extractFilename(typeof disposition === 'string' ? disposition : undefined);
+      return { blob: response.data, filename };
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.data instanceof Blob) {
+        const jsonPayload = await tryParseJsonBlob(error.response.data);
+        if (jsonPayload) {
+          if (error.response.status === 401 || jsonPayload.code === 401) {
+            notifyUnauthorized();
+            throw new ApiError(401, jsonPayload.message || '登录已过期');
+          }
+          throw new ApiError(
+            jsonPayload.code || error.response.status || 500,
+            jsonPayload.message || '请求失败',
+          );
+        }
+      }
       return handleRequestError(error);
     }
   },

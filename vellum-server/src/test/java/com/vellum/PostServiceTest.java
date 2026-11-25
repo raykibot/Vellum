@@ -118,7 +118,8 @@ class PostServiceTest {
 
         assertTrue(result.hasMore());
         assertEquals(2, result.items().size());
-        assertEquals(t2, result.nextCursorTime());
+        assertEquals(t2.toInstant(), result.nextCursorTime().toInstant());
+        assertEquals(ZoneOffset.ofHours(8), result.nextCursorTime().getOffset());
         assertEquals("p2", result.nextCursorId());
         verify(postImageMapper).selectByPostIds(List.of("p1", "p2"));
     }
@@ -280,7 +281,8 @@ class PostServiceTest {
         assertEquals("MOMENT", item.type());
         assertNull(item.title());
         assertEquals("杭州市", item.locationCity());
-        assertEquals(customTime, item.recordTime());
+        assertEquals(customTime.toInstant(), item.recordTime().toInstant());
+        assertEquals(ZoneOffset.ofHours(8), item.recordTime().getOffset());
         assertFalse(item.contentTruncated());
         assertTrue(item.images().isEmpty());
     }

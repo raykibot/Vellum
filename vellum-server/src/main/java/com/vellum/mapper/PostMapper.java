@@ -33,6 +33,15 @@ public interface PostMapper extends BaseMapper<Post> {
     );
 
     /**
+     * 按时间区间与类型查询未删除记录（按记录时间正序返回，供导出整理）。
+     */
+    List<Post> selectForExport(
+            @Param("type") String type,
+            @Param("startTime") OffsetDateTime startTime,
+            @Param("endTimeExclusive") OffsetDateTime endTimeExclusive
+    );
+
+    /**
      * 插入一条动态或长文记录。
      */
     @Insert("INSERT INTO post (id, type, title, content, location_city, record_time, deleted, created_at, updated_at) "

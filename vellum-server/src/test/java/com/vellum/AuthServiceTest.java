@@ -28,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.regex.Matcher;
@@ -73,6 +74,7 @@ class AuthServiceTest {
 
         assertNotNull(response.token());
         assertNotNull(response.expiresAt());
+        assertEquals(ZoneOffset.ofHours(8), response.expiresAt().getOffset());
 
         SecretKey key = Keys.hmacShaKeyFor(TEST_JWT_SECRET.getBytes(StandardCharsets.UTF_8));
         Claims claims = Jwts.parser()

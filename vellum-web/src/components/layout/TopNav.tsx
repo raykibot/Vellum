@@ -1,4 +1,4 @@
-import { Moon, PanelLeft, Settings, Sun } from 'lucide-react';
+import { Download, Moon, PanelLeft, Settings, Sun } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { TactileButton } from '@/components/ui/TactileButton';
 
@@ -12,6 +12,7 @@ interface TopNavProps {
   onCancelArticle: () => void;
   onPublishArticle: () => void;
   onBrandClick: () => void;
+  onOpenExport: () => void;
   onOpenSettings: () => void;
 }
 
@@ -25,6 +26,7 @@ export function TopNav({
   onCancelArticle,
   onPublishArticle,
   onBrandClick,
+  onOpenExport,
   onOpenSettings,
 }: TopNavProps) {
   const { resolvedTheme, toggleQuick } = useTheme();
@@ -65,7 +67,7 @@ export function TopNav({
         </button>
       </div>
 
-      {/* Right: theme toggle, settings, compose actions */}
+      {/* Right: theme toggle, export, settings, compose actions */}
       <div className="flex items-center gap-1.5">
         <TactileButton
           variant="ghost"
@@ -78,6 +80,16 @@ export function TopNav({
           ) : (
             <Moon className="w-4 h-4" strokeWidth={1.8} />
           )}
+        </TactileButton>
+
+        <TactileButton
+          variant="ghost"
+          size="icon"
+          aria-label="导出记录"
+          title="导出 ZIP"
+          onClick={onOpenExport}
+        >
+          <Download className="w-4 h-4" strokeWidth={1.8} />
         </TactileButton>
 
         <TactileButton

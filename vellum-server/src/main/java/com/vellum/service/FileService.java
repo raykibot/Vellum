@@ -25,7 +25,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.UUID;
@@ -38,6 +38,7 @@ import java.util.UUID;
 public class FileService {
 
     public static final String FILE_URL_PREFIX = "/api/v1/files/";
+    private static final ZoneId CHINA_ZONE = ZoneId.of("Asia/Shanghai");
     private static final long MAX_IMAGE_BYTES = 20L * 1024 * 1024;
     private static final int MAX_EDGE = 1920;
     private static final float JPEG_QUALITY = 0.82f;
@@ -76,7 +77,7 @@ public class FileService {
         String contentType = resolveMediaTypeByExt(ext).toString();
         byte[] imageData = compressImage(file, ext);
 
-        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+        OffsetDateTime now = OffsetDateTime.now(CHINA_ZONE);
         String id = UUID.randomUUID().toString();
         String objectName = OBJECT_DIR_FORMAT.format(now) + "/" + id + "." + ext;
 

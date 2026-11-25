@@ -11,6 +11,7 @@ import {
 import { ArticleEditor, type ArticleEditorHandle } from '@/components/article/ArticleEditor';
 import { ArticleReader } from '@/components/article/ArticleReader';
 import { QuickComposeModal } from '@/components/compose/QuickComposeModal';
+import { ExportModal } from '@/components/export/ExportModal';
 import { TopNav } from '@/components/layout/TopNav';
 import { SettingsModal } from '@/components/settings/SettingsModal';
 import { MomentDetail } from '@/components/timeline/MomentDetail';
@@ -44,6 +45,7 @@ export function TimelinePage() {
   const [sidebarBeforeCompose, setSidebarBeforeCompose] = useState(true);
   const [articleSubmitting, setArticleSubmitting] = useState(false);
   const [importedDraft, setImportedDraft] = useState<ImportedDraft | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const editorRef = useRef<ArticleEditorHandle>(null);
@@ -162,6 +164,7 @@ export function TimelinePage() {
         onCancelArticle={cancelArticleCompose}
         onPublishArticle={() => void editorRef.current?.submit()}
         onBrandClick={handleBrandClick}
+        onOpenExport={() => setExportOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
       />
 
@@ -235,6 +238,8 @@ export function TimelinePage() {
         onClose={() => setComposeOpen(false)}
         onCreated={handleMomentCreated}
       />
+
+      <ExportModal open={exportOpen} onClose={() => setExportOpen(false)} />
 
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>

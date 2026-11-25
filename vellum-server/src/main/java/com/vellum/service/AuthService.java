@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.Date;
 
 /**
@@ -27,6 +27,8 @@ import java.util.Date;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+
+    private static final ZoneId CHINA_ZONE = ZoneId.of("Asia/Shanghai");
 
     private final SysUserMapper sysUserMapper;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
@@ -46,7 +48,7 @@ public class AuthService {
             throw new BizException(401, "用户名或密码错误");
         }
 
-        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+        OffsetDateTime now = OffsetDateTime.now(CHINA_ZONE);
         OffsetDateTime expiresAt = now.plusDays(expireDays);
 
         String token = Jwts.builder()

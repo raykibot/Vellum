@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -36,6 +36,7 @@ public class PostService {
     private static final String TYPE_ALL = "ALL";
     private static final String TYPE_MOMENT = "MOMENT";
     private static final String TYPE_ARTICLE = "ARTICLE";
+    private static final ZoneId CHINA_ZONE = ZoneId.of("Asia/Shanghai");
 
     private final PostMapper postMapper;
     private final PostImageMapper postImageMapper;
@@ -72,7 +73,7 @@ public class PostService {
         String nextCursorId = null;
         if (hasMore) {
             Post last = pagePosts.get(pagePosts.size() - 1);
-            nextCursorTime = last.getRecordTime();
+            nextCursorTime = toChinaTime(last.getRecordTime());
             nextCursorId = last.getId();
         }
         return new CursorPageResult<>(safeSize, hasMore, nextCursorTime, nextCursorId, items);
@@ -116,8 +117,8 @@ public class PostService {
         if (content.isEmpty() && cleanImageIds.isEmpty()) {
             throw new BizException(400, "正文内容和图片不能同时为空");
         }
-        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
-        OffsetDateTime recordTime = request.recordTime() != null ? request.recordTime() : now;
+        OffsetDateTime now = OffsetDateTime.now(CHINA_ZONE);
+        OffsetDateTime recordTime = request.recordTime() != null ? toChinaTime(request.recordTime()) : now;
 
         Post post = new Post();
         post.setId(UUID.randomUUID().toString());
@@ -152,7 +153,7 @@ public class PostService {
             throw new BizException(400, "记录 ID 不能为空");
         }
 
-        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+        OffsetDateTime now = OffsetDateTime.now(CHINA_ZONE);
         int updated = postMapper.softDeleteById(cleanId, now);
         if (updated == 0) {
             throw new BizException(404, "记录不存在");
@@ -263,7 +264,7 @@ public class PostService {
         return stripped.substring(0, ARTICLE_SUMMARY_MAX_CHARS).trim() + "...";
     }
 
-    private String stripDuplicateLeadingHeading(String rawContent, String title) {
+    public static String stripDuplicateLeadingHeading(String rawContent, String title) {
         String normalized = rawContent.replace("\r\n", "\n");
         if (title == null || title.isBlank()) {
             return normalized;
@@ -305,11 +306,15 @@ public class PostService {
                 post.getTitle(),
                 content,
                 post.getLocationCity(),
-                post.getRecordTime(),
-                post.getCreatedAt(),
-                post.getUpdatedAt(),
+                toChinaTime(post.getRecordTime()),
+                toChinaTime(post.getCreatedAt()),
+                toChinaTime(post.getUpdatedAt()),
                 images,
                 contentTruncated
         );
+    }
+
+    private OffsetDateTime toChinaTime(OffsetDateTime time) {
+        return time == null ? null : time.atZoneSameInstant(CHINA_ZONE).toOffsetDateTime();
     }
 }

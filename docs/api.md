@@ -1,7 +1,7 @@
 # 接口设计与联调文档 — 素笺（Vellum）
 
 > **基础路径**：`/api/v1`  
-> **接口风格**：RESTful JSON（`camelCase` 字段），时间统一 ISO-8601 UTC 字符串（例如 `2026-11-23T07:00:00Z`）  
+> **接口风格**：RESTful JSON（`camelCase` 字段），时间统一中国大陆东八区（`Asia/Shanghai`）ISO-8601 字符串（例如 `2026-11-23T15:00:00+08:00`）  
 > **状态说明**：本文档记录当前已完成接口的实现细节（便于 Code Review）与待确认接口的设计方案。
 
 ---
@@ -405,3 +405,38 @@
   - 优先查询 `post_image` 有效元数据（不存在或已删除直接返回 `404 Not Found`）；
   - 请求头 `If-None-Match` 命中图片 UUID 时直接返回 `304 Not Modified`（不读取 MinIO）；
   - 命中图片时流式返回字节内容，并附带 `ETag: "<id>"` 与 `Cache-Control: private, max-age=31536000, immutable`。
+
+---
+
+## 4. 导出模块（`ExportController`）
+
+### 4.1 导出含图 ZIP 包（✅ 已实现）
+
+- **接口路径**：`GET /api/v1/exports/zip`
+- **是否鉴权**：是（支持 `Authorization: Bearer <token>` 或 Query 参数 `?token=<token>`）
+- **关联代码**：
+  - [ExportController.java](file:///d:/Code/code_self/vellum-server/src/main/java/com/vellum/controller/ExportController.java)
+  - [ExportService.java](file:///d:/Code/code_self/vellum-server/src/main/java/com/vellum/service/ExportService.java)
+  - [PostMapper.java](file:///d:/Code/code_self/vellum-server/src/main/java/com/vellum/mapper/PostMapper.java) / [PostMapper.xml](file:///d:/Code/code_self/vellum-server/src/main/resources/mapper/PostMapper.xml)
+
+#### 请求参数（Query String，全部可选）
+
+| 参数 | 类型 | 默认值 | 说明 |
+| :--- | :--- | :---: | :--- |
+| `startDate` | `yyyy-MM-dd` | `null` | 起始日期（按中国大陆时区含当天 `00:00:00+08:00`；都不传默认导出全部） |
+| `endDate` | `yyyy-MM-dd` | `null` | 结束日期（按中国大陆时区含当天 `23:59:59+08:00`；需 `startDate <= endDate`） |
+| `type` | `string` | `ALL` | 可选 `ALL` / `MOMENT` / `ARTICLE`（忽略大小写） |
+
+#### 响应形式与 ZIP 结构
+- **校验失败 / 无记录**：写流前统一校验，日期非法或筛选无记录时返回标准 JSON `{ "code": 400|404, "message": "...", "data": null }`。
+- **成功响应头**：`Content-Type: application/zip`、`Content-Disposition: attachment; filename="vellum-export-yyyyMMdd-yyyyMMdd.zip"`（全量导出时为 `vellum-export-all-yyyyMMdd.zip`）。
+- **压缩包内容**：
+  - `journal.md`：按记录时间正序（旧 → 新）汇总导出全部文字记录、统计摘要与图片相对引用（长文自动去除与标题重复的开头标题行）；
+  - `images/<yyyyMMdd-HHmm>-<序号>-<imageId前8位>.<后缀>`：从私有 MinIO 流式拉取并写入，单张图片缺失时记录告警并自动跳过，不影响其余内容导出。
+
+---
+
+### 4.2 导出纯 Markdown（⏸️ 暂未实现 · 501 占位）
+
+- **接口路径**：`GET /api/v1/exports/markdown`
+- **当前状态**：骨架占位，调用固定抛出 `BizException(501, "接口尚未实现")`。

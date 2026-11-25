@@ -22,6 +22,7 @@ out/
 application-dev.yml
 application-local.yml
 deploy/.env
+deploy/.env.prod
 
 # Node / React (vellum-web)
 node_modules/

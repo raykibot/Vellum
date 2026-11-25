@@ -18,4 +18,20 @@
         LIMIT #{limit}
     </select>
 
+    <select id="selectForExport" resultType="com.vellum.entity.Post">
+        SELECT id, type, title, content, location_city, record_time, deleted, created_at, updated_at
+        FROM post
+        WHERE deleted = FALSE
+        <if test="type != null and type != ''">
+            AND type = #{type}
+        </if>
+        <if test="startTime != null">
+            AND record_time &gt;= #{startTime}
+        </if>
+        <if test="endTimeExclusive != null">
+            AND record_time &lt; #{endTimeExclusive}
+        </if>
+        ORDER BY record_time ASC, id ASC
+    </select>
+
 </mapper>
