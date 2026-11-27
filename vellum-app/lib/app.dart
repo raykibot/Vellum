@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vellum_app/core/motion/vellum_motion.dart';
 import 'package:vellum_app/core/theme/vellum_theme.dart';
@@ -11,7 +12,7 @@ class _VellumScrollBehavior extends ScrollBehavior {
 
   @override
   ScrollPhysics getScrollPhysics(BuildContext context) {
-    return const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
+    return const BouncingScrollPhysics();
   }
 }
 
@@ -69,6 +70,16 @@ class _VellumAppState extends ConsumerState<VellumApp>
     return MaterialApp.router(
       title: '素笺',
       debugShowCheckedModeBanner: false,
+      locale: const Locale('zh', 'CN'),
+      supportedLocales: const [
+        Locale('zh', 'CN'),
+        Locale('en', 'US'),
+      ],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       themeMode: themeMode,
       theme: VellumTheme.light(),
       darkTheme: VellumTheme.dark(),

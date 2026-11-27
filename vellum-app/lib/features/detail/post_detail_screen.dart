@@ -377,20 +377,23 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     if (cleanBody.trim().isEmpty) return const SizedBox.shrink();
 
     if (post.type == PostType.moment) {
-      return SelectableText(
-        cleanBody,
-        style: TextStyle(
-          fontSize: 15,
-          height: 28 / 15,
-          color: c.ink,
+      return SelectionArea(
+        child: Text(
+          cleanBody,
+          style: TextStyle(
+            fontSize: 15,
+            height: 28 / 15,
+            color: c.ink,
+          ),
         ),
       );
     }
 
-    return MarkdownBody(
-      data: cleanBody,
-      selectable: true,
-      styleSheet: MarkdownStyleSheet(
+    return SelectionArea(
+      child: MarkdownBody(
+        data: cleanBody,
+        selectable: false,
+        styleSheet: MarkdownStyleSheet(
         p: TextStyle(
           fontSize: 15,
           height: 28 / 15,
@@ -451,6 +454,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
           border: Border(top: BorderSide(color: c.divider)),
         ),
       ),
+    ),
     );
   }
 }

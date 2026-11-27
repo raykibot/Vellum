@@ -30,6 +30,7 @@ class VellumMotion {
   /// `cubic-bezier(0.22, 1, 0.36, 1)`：Web 端核心非线性减速曲线。
   static const Curve easeOut = Cubic(0.22, 1.0, 0.36, 1.0);
   static const Curve easeIn = Cubic(0.4, 0.0, 1.0, 1.0);
+  static const Curve easeOutReverse = Curves.easeInOutCubic;
 
   /// 与 Web `TactileButton` / `SegmentedControl` / `Modal` / `Lightbox` 一致的物理弹簧参数。
   static const SpringDescription tapSpring =
@@ -51,15 +52,15 @@ class VellumMotion {
   static const Duration entrance = Duration(milliseconds: 340);
 
   static const Duration pagePush = Duration(milliseconds: 380);
-  static const Duration pagePop = Duration(milliseconds: 320);
+  static const Duration pagePop = Duration(milliseconds: 360);
   static const Duration pageModal = Duration(milliseconds: 380);
-  static const Duration pageModalPop = Duration(milliseconds: 300);
+  static const Duration pageModalPop = Duration(milliseconds: 340);
   static const Duration pageFade = Duration(milliseconds: 320);
 
   static const Duration dialog = Duration(milliseconds: 360);
-  static const Duration dialogPop = Duration(milliseconds: 240);
+  static const Duration dialogPop = Duration(milliseconds: 280);
   static const Duration sheet = Duration(milliseconds: 380);
-  static const Duration sheetPop = Duration(milliseconds: 280);
+  static const Duration sheetPop = Duration(milliseconds: 320);
 }
 
 /// 复刻 Web `TactileButton` 的物理按压反馈（`whileTap: { scale: 0.96 }` + spring 520/32）。

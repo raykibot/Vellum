@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- Release 默认强制 HTTPS -->
-    <base-config cleartextTrafficPermitted="false" />
+    <!-- 允许本地/局域网 HTTP 联调与 HTTPS 生产环境（公网部署推荐配合 HTTPS 域名） -->
+    <base-config cleartextTrafficPermitted="true" />
 
     <!-- Debug 构建允许本地开发及局域网 HTTP 联调 -->
     <debug-overrides>

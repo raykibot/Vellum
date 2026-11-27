@@ -31,27 +31,14 @@ class PhotoGalleryScreen extends StatefulWidget {
     String baseUrl = '',
     String? token,
   }) {
-    return PageRouteBuilder<void>(
-      opaque: false,
-      barrierColor: Colors.transparent,
-      transitionDuration: const Duration(milliseconds: 340),
-      reverseTransitionDuration: const Duration(milliseconds: 280),
-      pageBuilder: (_, __, ___) => PhotoGalleryScreen(
+    return _PhotoGalleryPageRoute(
+      builder: (_) => PhotoGalleryScreen(
         images: images,
         initialIndex: initialIndex,
         heroTagPrefix: heroTagPrefix,
         baseUrl: baseUrl,
         token: token,
       ),
-      transitionsBuilder: (_, animation, __, child) {
-        final curve = CurvedAnimation(
-          parent: animation,
-          curve: animation.status == AnimationStatus.reverse
-              ? VellumMotion.easeIn
-              : VellumMotion.easeOut,
-        );
-        return FadeTransition(opacity: curve, child: child);
-      },
     );
   }
 
@@ -234,5 +221,63 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen>
         ],
       ),
     );
+  }
+}
+
+class _PhotoGalleryPageRoute extends PageRoute<void> {
+  _PhotoGalleryPageRoute({required this.builder});
+
+  final WidgetBuilder builder;
+
+  @override
+  bool get opaque => false;
+
+  @override
+  Color? get barrierColor => Colors.transparent;
+
+  @override
+  String? get barrierLabel => null;
+
+  @override
+  bool get barrierDismissible => false;
+
+  @override
+  bool get maintainState => true;
+
+  @override
+  Duration get transitionDuration => const Duration(milliseconds: 360);
+
+  @override
+  Duration get reverseTransitionDuration => const Duration(milliseconds: 380);
+
+  @override
+  bool canTransitionFrom(TransitionRoute<dynamic> previousRoute) => false;
+
+  @override
+  Widget buildPage(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+  ) {
+    return Semantics(
+      scopesRoute: true,
+      explicitChildNodes: true,
+      child: builder(context),
+    );
+  }
+
+  @override
+  Widget buildTransitions(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    final curve = CurvedAnimation(
+      parent: animation,
+      curve: VellumMotion.easeOut,
+      reverseCurve: VellumMotion.easeOutReverse,
+    );
+    return FadeTransition(opacity: curve, child: child);
   }
 }

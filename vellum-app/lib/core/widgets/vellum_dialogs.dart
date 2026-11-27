@@ -16,14 +16,15 @@ Future<T?> showVellumDialog<T>({
     transitionDuration: VellumMotion.dialog,
     pageBuilder: (ctx, animation, secondaryAnimation) => builder(ctx),
     transitionBuilder: (ctx, animation, secondaryAnimation, child) {
-      final isForward = animation.status != AnimationStatus.reverse;
       final fadeCurve = CurvedAnimation(
         parent: animation,
-        curve: isForward ? VellumMotion.easeOut : VellumMotion.easeIn,
+        curve: VellumMotion.easeOut,
+        reverseCurve: VellumMotion.easeOutReverse,
       );
       final motionCurve = CurvedAnimation(
         parent: animation,
-        curve: isForward ? VellumMotion.modalCurve : VellumMotion.easeIn,
+        curve: VellumMotion.modalCurve,
+        reverseCurve: VellumMotion.easeOutReverse,
       );
 
       return AnimatedBuilder(
@@ -66,7 +67,7 @@ Future<T?> showVellumBottomSheet<T>({
       duration: VellumMotion.sheet,
       reverseDuration: VellumMotion.sheetPop,
       curve: VellumMotion.easeOut,
-      reverseCurve: VellumMotion.easeIn,
+      reverseCurve: VellumMotion.easeOutReverse,
     ),
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
@@ -91,4 +92,168 @@ Future<T?> showVellumBottomSheet<T>({
       );
     },
   );
+}
+
+/// 统一的中文化日期区间选择器弹出层：保持原生日历内部交互，仅优化进入/退出的 120Hz 丝滑转场与素笺极简黑白主题。
+Future<DateTimeRange?> showVellumDateRangePicker({
+  required BuildContext context,
+  required DateTime firstDate,
+  required DateTime lastDate,
+  DateTimeRange? initialDateRange,
+  String helpText = '选择日期区间',
+  String saveText = '确定',
+  String cancelText = '取消',
+}) {
+  return Navigator.of(context, rootNavigator: true).push<DateTimeRange>(
+    _VellumPopupRoute<DateTimeRange>(
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      barrierColor: Colors.black.withValues(alpha: 0.28),
+      transitionDuration: const Duration(milliseconds: 420),
+      reverseTransitionDuration: const Duration(milliseconds: 360),
+      pageBuilder: (ctx, animation, secondaryAnimation) {
+        final c = ctx.vellum;
+        final baseTheme = Theme.of(ctx);
+        return Localizations.override(
+          context: ctx,
+          locale: const Locale('zh', 'CN'),
+          child: Theme(
+            data: baseTheme.copyWith(
+              colorScheme: baseTheme.colorScheme.copyWith(
+                primary: c.actionBg,
+                onPrimary: c.actionText,
+                surface: c.canvas,
+                onSurface: c.ink,
+              ),
+              datePickerTheme: DatePickerThemeData(
+                backgroundColor: c.canvas,
+                surfaceTintColor: Colors.transparent,
+                headerBackgroundColor: c.canvas,
+                headerForegroundColor: c.ink,
+                rangePickerBackgroundColor: c.canvas,
+                rangePickerSurfaceTintColor: Colors.transparent,
+                rangePickerElevation: 0,
+                rangePickerHeaderBackgroundColor: c.canvas,
+                rangePickerHeaderForegroundColor: c.ink,
+                rangeSelectionBackgroundColor: c.ink.withValues(alpha: 0.08),
+              ),
+            ),
+            child: DateRangePickerDialog(
+              firstDate: firstDate,
+              lastDate: lastDate,
+              initialDateRange: initialDateRange,
+              helpText: helpText,
+              saveText: saveText,
+              cancelText: cancelText,
+              confirmText: saveText,
+              fieldStartLabelText: '开始日期',
+              fieldEndLabelText: '结束日期',
+              errorFormatText: '日期格式无效',
+              errorInvalidText: '超出可选范围',
+              errorInvalidRangeText: '结束日期不能早于开始日期',
+            ),
+          ),
+        );
+      },
+      transitionsBuilder: (ctx, animation, secondaryAnimation, child) {
+        final motionCurve = CurvedAnimation(
+          parent: animation,
+          curve: VellumMotion.easeOut,
+          reverseCurve: VellumMotion.easeOutReverse,
+        );
+        final fadeCurve = CurvedAnimation(
+          parent: animation,
+          curve: const Interval(0.0, 0.78, curve: VellumMotion.easeOut),
+          reverseCurve: VellumMotion.easeOutReverse,
+        );
+
+        final slideUp = Tween<Offset>(
+          begin: const Offset(0.0, 0.12),
+          end: Offset.zero,
+        ).animate(motionCurve);
+        final scaleIn = Tween<double>(
+          begin: 0.96,
+          end: 1.0,
+        ).animate(motionCurve);
+
+        return RepaintBoundary(
+          child: FadeTransition(
+            opacity: fadeCurve,
+            child: SlideTransition(
+              position: slideUp,
+              child: ScaleTransition(
+                scale: scaleIn,
+                child: child,
+              ),
+            ),
+          ),
+        );
+      },
+    ),
+  );
+}
+
+class _VellumPopupRoute<T> extends PopupRoute<T> {
+  _VellumPopupRoute({
+    required this.pageBuilder,
+    required this.transitionsBuilder,
+    required Duration transitionDuration,
+    required Duration reverseTransitionDuration,
+    Color? barrierColor,
+    bool barrierDismissible = true,
+    String? barrierLabel,
+  })  : _transitionDuration = transitionDuration,
+        _reverseTransitionDuration = reverseTransitionDuration,
+        _barrierColor = barrierColor,
+        _barrierDismissible = barrierDismissible,
+        _barrierLabel = barrierLabel;
+
+  final RoutePageBuilder pageBuilder;
+  final RouteTransitionsBuilder transitionsBuilder;
+  final Duration _transitionDuration;
+  final Duration _reverseTransitionDuration;
+  final Color? _barrierColor;
+  final bool _barrierDismissible;
+  final String? _barrierLabel;
+
+  @override
+  Color? get barrierColor => _barrierColor;
+
+  @override
+  bool get barrierDismissible => _barrierDismissible;
+
+  @override
+  String? get barrierLabel => _barrierLabel;
+
+  @override
+  Duration get transitionDuration => _transitionDuration;
+
+  @override
+  Duration get reverseTransitionDuration => _reverseTransitionDuration;
+
+  @override
+  bool canTransitionFrom(TransitionRoute<dynamic> previousRoute) => false;
+
+  @override
+  Widget buildPage(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+  ) {
+    return Semantics(
+      scopesRoute: true,
+      explicitChildNodes: true,
+      child: pageBuilder(context, animation, secondaryAnimation),
+    );
+  }
+
+  @override
+  Widget buildTransitions(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    return transitionsBuilder(context, animation, secondaryAnimation, child);
+  }
 }

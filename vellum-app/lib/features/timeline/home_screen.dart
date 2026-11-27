@@ -7,6 +7,7 @@ import 'package:vellum_app/core/theme/vellum_theme.dart';
 import 'package:vellum_app/core/utils/formatters.dart';
 import 'package:vellum_app/core/utils/markdown_io.dart';
 import 'package:vellum_app/core/widgets/segmented_pill.dart';
+import 'package:vellum_app/core/widgets/vellum_dialogs.dart';
 import 'package:vellum_app/core/widgets/vellum_icon.dart';
 import 'package:vellum_app/data/models/models.dart';
 import 'package:vellum_app/data/providers/app_providers.dart';
@@ -52,10 +53,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _pickDateRange() async {
     final current = ref.read(timelineProvider);
-    final c = context.vellum;
     final now = DateTime.now();
 
-    final picked = await showDateRangePicker(
+    final picked = await showVellumDateRangePicker(
       context: context,
       firstDate: DateTime(2020, 1, 1),
       lastDate: DateTime(now.year + 1, 12, 31),
@@ -63,21 +63,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ? DateTimeRange(start: current.startDate!, end: current.endDate!)
           : null,
       helpText: '按日期筛选',
-      saveText: '确定',
-      cancelText: '取消',
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context).colorScheme.copyWith(
-                  primary: c.actionBg,
-                  onPrimary: c.actionText,
-                  surface: c.canvas,
-                  onSurface: c.ink,
-                ),
-          ),
-          child: child!,
-        );
-      },
     );
     if (picked != null && mounted) {
       ref

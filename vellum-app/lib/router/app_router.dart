@@ -27,14 +27,15 @@ CustomTransitionPage<void> _vellumSlidePage(
     reverseTransitionDuration: VellumMotion.pagePop,
     child: RepaintBoundary(child: child),
     transitionsBuilder: (context, animation, secondaryAnimation, pageChild) {
-      final isForward = animation.status != AnimationStatus.reverse;
       final enterCurve = CurvedAnimation(
         parent: animation,
-        curve: isForward ? VellumMotion.easeOut : VellumMotion.easeIn,
+        curve: VellumMotion.easeOut,
+        reverseCurve: VellumMotion.easeOutReverse,
       );
       final exitCurve = CurvedAnimation(
         parent: secondaryAnimation,
         curve: VellumMotion.easeOut,
+        reverseCurve: VellumMotion.easeOutReverse,
       );
 
       final slideIn = Tween<Offset>(
@@ -102,10 +103,10 @@ CustomTransitionPage<void> _vellumModalPage(
     reverseTransitionDuration: VellumMotion.pageModalPop,
     child: RepaintBoundary(child: child),
     transitionsBuilder: (context, animation, secondaryAnimation, pageChild) {
-      final isForward = animation.status != AnimationStatus.reverse;
       final curve = CurvedAnimation(
         parent: animation,
-        curve: isForward ? VellumMotion.easeOut : VellumMotion.easeIn,
+        curve: VellumMotion.easeOut,
+        reverseCurve: VellumMotion.easeOutReverse,
       );
       final slideUp = Tween<Offset>(
         begin: const Offset(0.0, 0.14),
@@ -116,6 +117,7 @@ CustomTransitionPage<void> _vellumModalPage(
       final exitCurve = CurvedAnimation(
         parent: secondaryAnimation,
         curve: VellumMotion.easeOut,
+        reverseCurve: VellumMotion.easeOutReverse,
       );
       final dimOut = Tween<double>(begin: 0.0, end: 0.06).animate(exitCurve);
 
@@ -156,10 +158,10 @@ CustomTransitionPage<void> _vellumFadePage(
     reverseTransitionDuration: const Duration(milliseconds: 260),
     child: RepaintBoundary(child: child),
     transitionsBuilder: (context, animation, secondaryAnimation, pageChild) {
-      final isForward = animation.status != AnimationStatus.reverse;
       final curve = CurvedAnimation(
         parent: animation,
-        curve: isForward ? VellumMotion.easeOut : VellumMotion.easeIn,
+        curve: VellumMotion.easeOut,
+        reverseCurve: VellumMotion.easeOutReverse,
       );
       final slideIn = Tween<Offset>(
         begin: const Offset(0.0, 0.025),
