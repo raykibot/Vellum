@@ -38,7 +38,7 @@ build/
 .packages
 
 # 本地数据与临时文件
-data/
+/data/
 vellum-server/data/
 *.db
 *.sqlite
